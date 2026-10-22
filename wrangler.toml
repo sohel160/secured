@@ -1,3 +1,3 @@
-name = "secured"
+name = "proxies-worker-gh"
 main = "worker.js"
 compatibility_date = "2024-01-01"
