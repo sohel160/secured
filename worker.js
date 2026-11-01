@@ -32,11 +32,11 @@ export default {
     if (url.pathname === "/proxies") {
       const proxies = `
 proxies:
-  - {name: proxy1, type: socks5, server: 103.178.73.1, port: 9169, username: movip21, password: movip21, udp: true}
-  - {name: proxy2, type: socks5, server: 103.146.134.225, port: 9169, username: movip21, password: movip21, udp: true}
-  - {name: proxy3, type: socks5, server: 103.118.152.36, port: 9169, username: movip21, password: movip21, udp: true}
-  - {name: proxy4, type: socks5, server: 103.111.224.46, port: 9169, username: movip21, password: movip21, udp: true}
-  - {name: proxy5, type: socks5, server: 202.5.36.149, port: 9169, username: movieproxy, password: movieproxy, udp: true}
+  - { name: proxy1, type: socks5, server: 103.178.73.1, port: 9169, username: movip21, password: movip21, udp: true }
+  - { name: proxy2, type: socks5, server: 103.146.134.225, port: 9169, username: movip21, password: movip21, udp: true }
+  - { name: proxy3, type: socks5, server: 103.118.152.36, port: 9169, username: movip21, password: movip21, udp: true }
+  - { name: proxy4, type: socks5, server: 103.111.224.46, port: 9169, username: movip21, password: movip21, udp: true }
+  - { name: proxy5, type: socks5, server: 202.5.36.149, port: 9169, username: movieproxy, password: movieproxy, udp: true }
 `;
 
       return new Response(proxies.trim(), {
