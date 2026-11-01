@@ -3,13 +3,12 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
 
-    // ==========================================
-    // SECURITY: Token and client validation
-    // ==========================================
+    // Token protection
     if (url.searchParams.get("token") !== "abc123") {
       return new Response("Forbidden", { status: 403 });
     }
 
+    // Allow Clash-based clients
     const ua = request.headers.get("User-Agent") || "";
 
     const allowedUA = [
@@ -26,9 +25,7 @@ export default {
       return new Response("404 Not Found", { status: 404 });
     }
 
-    // ==========================================
-    // PROXY PROVIDER ENDPOINT
-    // ==========================================
+    // Proxy provider endpoint
     if (url.pathname === "/proxies") {
       const proxies = `
 proxies:
@@ -47,13 +44,13 @@ proxies:
       });
     }
 
-    // ==========================================
-    // MAIN FLCLASH CONFIGURATION
-    // ==========================================
-    const config = `
-# FlClash Live Xrorx Configuration
-# Cloudflare Worker proxy provider
+    // Only serve the main config at the root path
+    if (url.pathname !== "/") {
+      return new Response("Not Found", { status: 404 });
+    }
 
+    // Main FlClash configuration
+    const config = `
 port: 7890
 socks-port: 7891
 mixed-port: 7892
@@ -67,7 +64,6 @@ tcp-concurrent: true
 inbound-mptcp: true
 find-process-mode: off
 
-# TUN Configuration
 tun:
   enable: true
   stack: mixed
@@ -79,7 +75,6 @@ tun:
   mtu: 1500
   endpoint-independent-nat: true
 
-# DNS Configuration
 dns:
   enable: true
   listen: 0.0.0.0:1053
@@ -92,11 +87,10 @@ dns:
     - 119.40.90.1
     - https://dns.google/dns-query
 
-# Live Cloudflare Proxy Provider
 proxy-providers:
   xrorx-cloudflare:
     type: http
-    url: "\${url.origin}/proxies?token=abc123"
+    url: "${url.origin}/proxies?token=abc123"
     interval: 60
     path: ./providers/xrorx-cloudflare.yaml
     health-check:
@@ -106,10 +100,7 @@ proxy-providers:
       timeout: 5000
       lazy: false
 
-# Proxy Groups
 proxy-groups:
-
-  # Distributes connections across available servers
   - name: "⚡ UNITE-ALL-BANDWIDTH"
     type: load-balance
     strategy: round-robin
@@ -119,7 +110,6 @@ proxy-groups:
     use:
       - xrorx-cloudflare
 
-  # Automatically selects the lowest-latency server
   - name: "🎯 BEST-PING"
     type: url-test
     url: http://connectivitycheck.gstatic.com/generate_204
@@ -129,7 +119,6 @@ proxy-groups:
     use:
       - xrorx-cloudflare
 
-  # Manual server selection
   - name: "MANUAL-SELECT"
     type: select
     proxies:
@@ -138,16 +127,9 @@ proxy-groups:
     use:
       - xrorx-cloudflare
 
-# Routing Rules
 rules:
-
-  # Bangladesh local traffic bypass
   - GEOIP,BD,DIRECT
-
-  # Route UDP directly
   - NETWORK,UDP,DIRECT
-
-  # Default route through load balancing
   - MATCH,⚡ UNITE-ALL-BANDWIDTH
 `;
 
