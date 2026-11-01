@@ -3,12 +3,12 @@ export default {
 
     const url = new URL(request.url)
 
-    // 🔐 token protection
+    // 🔐 Token protection
     if (url.searchParams.get("token") !== "abc123") {
       return new Response("Forbidden", { status: 403 })
     }
 
-    // 🔍 allow only Clash clients
+    // 🔍 Allow only Clash-based clients
     const ua = request.headers.get("User-Agent") || ""
 
     const allowedUA = [
@@ -17,7 +17,8 @@ export default {
       "Meta",
       "FiClash",
       "Stash",
-      "okhttp"
+      "okhttp",
+      "Dalvik"
     ]
 
     if (!allowedUA.some(a => ua.includes(a))) {
@@ -31,36 +32,29 @@ export default {
 
       const proxies = `
 proxies:
-  - { name: "HTTP-01", type: http, server: 113.212.109.164, port:  }
-  - { name: "HTTP-02", type: http, server: 113.212.109.163, port:  }
-  - { name: "HTTP-03", type: http, server: 113.212.109.132, port:  }
-  - { name: "HTTP-04", type: http, server: 103.84.36.225, port:  }
-  - { name: "HTTP-05", type: http, server: 103.84.36.237, port:  }
-  - { name: "HTTP-06", type: http, server: 113.212.109.188, port:  }
-  - { name: "HTTP-07", type: http, server: 103.84.36.237, port:  }
-  - { name: "HTTP-08", type: http, server: 113.212.109.56, port:  }
-  - { name: "HTTP-09", type: http, server: 103.84.38.110, port:  }
-  - { name: "HTTP-10", type: http, server: 103.84.38.84, port:  }
-  - { name: "HTTP-11", type: http, server: 103.84.38.52, port:  }
-  - { name: "HTTP-12", type: http, server: 103.84.37.196, port:  }
-  - { name: "HTTP-13", type: http, server: 103.84.37.132, port:  }
-  - { name: "HTTP-14", type: http, server: 103.84.37.123, port:  }
-  - { name: "HTTP-15", type: http, server: 103.84.37.100, port:  }
-  - { name: "HTTP-16", type: http, server: 103.84.37.72, port:   }
-  - { name: "HTTP-17", type: http, server: 103.84.36.237, port:  }
+  - {name: proxy1, type: socks5, server: 103.178.73.1, port: 9169, username: movip21, password: movip21 }
+  - {name: proxy2, type: socks5, server: 103.146.134.225, port: 9169, username: movip21, password: movip21 }
+  - {name: proxy3, type: socks5, server: 103.118.152.36, port: 9169, username: movip21, password: movip21 }
+  - {name: proxy4, type: socks5, server: 103.111.224.46, port: 9169, username: movip21, password: movip21 }
+  - {name: proxy5, type: socks5, server: 202.5.36.149, port: 9169, username: movieproxy, password: movieproxy }
+  
 `
 
-      return new Response(proxies, {
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8"
-        }
+      return new Response(proxies.trim(), {
+        headers: { "Content-Type": "text/plain" }
       })
     }
 
     // =========================
-    // ⚡ MAIN CONFIG
+    // ⚡ MAIN CLASH CONFIG
     // =========================
     const config = `
+mixed-port: 7893
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: false
+
 proxy-providers:
   myprovider:
     type: http
@@ -74,69 +68,82 @@ proxy-providers:
 
 proxy-groups:
 
-  - name: SELECTOR🔥
-    type: select
-    proxies:
-      - LOAD-BALANCE
-      - STABLE
-
-  - name: STABLE
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    tolerance: 50
-    use:
-      - myprovider
-
+  # ⚡ Max speed (parallel)
   - name: LOAD-BALANCE
     type: load-balance
-    strategy: round-robin
+    strategy: consistent-hashing
     url: http://www.gstatic.com/generate_204
-    interval: 60
+    interval: 120
+    lazy: true
     use:
       - myprovider
 
-  - name: ALL
-    type: select
+  # 🔥 Smart fastest
+  - name: AUTO
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 180
+    tolerance: 100
+    lazy: true
     use:
       - myprovider
+
+  # 🛡 Hybrid (speed + stability)
+  - name: HYBRID
+    type: fallback
+    url: http://www.gstatic.com/generate_204
+    interval: 120
+    proxies:
+      - LOAD-BALANCE
+      - AUTO
+      - DIRECT
+
+  # 🎯 Final selector
+  - name: SPEED🔥
+    type: select
+    proxies:
+      - HYBRID
+      - LOAD-BALANCE
+      - AUTO
+      - DIRECT
 
 rules:
-  # Google services → DIRECT
-  - DOMAIN-SUFFIX,google.com,DIRECT
-  - DOMAIN-SUFFIX,googleapis.com,DIRECT
-  - DOMAIN-SUFFIX,gstatic.com,DIRECT
-  - DOMAIN-SUFFIX,googlevideo.com,DIRECT
-  - DOMAIN-SUFFIX,youtube.com,DIRECT
-  - DOMAIN-SUFFIX,ytimg.com,DIRECT
-  - DOMAIN-SUFFIX,ggpht.com,DIRECT
-  - DOMAIN-SUFFIX,gvt1.com,DIRECT
-  - DOMAIN-SUFFIX,gvt2.com,DIRECT
-  - DOMAIN-SUFFIX,gvt3.com,DIRECT
-  - DOMAIN-SUFFIX,android.com,DIRECT
-  - DOMAIN-SUFFIX,gmail.com,DIRECT
-  - DOMAIN-SUFFIX,googleusercontent.com,DIRECT
 
-  # Chrome
-  - DOMAIN-SUFFIX,chrome.com,DIRECT
-  - DOMAIN-SUFFIX,chromium.org,DIRECT
-  - DOMAIN-SUFFIX,googlezip.net,DIRECT
+  # 🇧🇩 Local traffic bypass (BIG SPEED BOOST)
+  - GEOIP,BD,DIRECT
 
-  # Firefox
-  - DOMAIN-SUFFIX,mozilla.org,DIRECT
-  - DOMAIN-SUFFIX,mozilla.com,DIRECT
-  - DOMAIN-SUFFIX,mozilla.net,DIRECT
-  - DOMAIN-SUFFIX,firefox.com,DIRECT
-  - DOMAIN-SUFFIX,firefox.net,DIRECT
+  # 🚀 Streaming / CDN
+  - DOMAIN-SUFFIX,googlevideo.com,SPEED🔥
+  - DOMAIN-SUFFIX,youtube.com,SPEED🔥
+  - DOMAIN-SUFFIX,ytimg.com,SPEED🔥
+  - DOMAIN-SUFFIX,gstatic.com,SPEED🔥
+  - DOMAIN-SUFFIX,googleapis.com,SPEED🔥
+  - DOMAIN-SUFFIX,cloudflare.com,SPEED🔥
+  - DOMAIN-SUFFIX,cloudflare-dns.com,SPEED🔥
+  - DOMAIN-SUFFIX,akamaihd.net,SPEED🔥
+  - DOMAIN-SUFFIX,fastly.net,SPEED🔥
+  - DOMAIN-SUFFIX,cdn.jsdelivr.net,SPEED🔥
 
-  # Everything else
-  - MATCH,SELECTOR🔥
+  # ⚡ Apps / API
+  - DOMAIN-SUFFIX,openai.com,SPEED🔥
+  - DOMAIN-SUFFIX,chatgpt.com,SPEED🔥
+  - DOMAIN-SUFFIX,facebook.com,SPEED🔥
+  - DOMAIN-SUFFIX,fbcdn.net,SPEED🔥
+  - DOMAIN-SUFFIX,whatsapp.net,SPEED🔥
+  - DOMAIN-SUFFIX,telegram.org,SPEED🔥
+
+  # 🎮 Gaming
+  - DOMAIN-SUFFIX,epicgames.com,SPEED🔥
+  - DOMAIN-SUFFIX,riotgames.com,SPEED🔥
+  - DOMAIN-SUFFIX,pubgmobile.com,SPEED🔥
+  - DOMAIN-SUFFIX,tencent.com,SPEED🔥
+
+  # 🧠 Default
+  - MATCH,SPEED🔥
 `
 
-    return new Response(config, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8"
-      }
+    return new Response(config.trim(), {
+      headers: { "Content-Type": "text/plain" }
     })
   }
 }
