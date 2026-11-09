@@ -34,18 +34,18 @@ proxies:
   - { name: proxy3, type: socks5, server: 103.118.152.36, port: 9169, username: movip21, password: movip21, udp: true }
   - { name: proxy4, type: socks5, server: 103.111.224.46, port: 9169, username: movip21, password: movip21, udp: true }
   - { name: proxy5, type: socks5, server: 202.5.36.149, port: 9169, username: movieproxy, password: movieproxy, udp: true }
-  - { name: proxy6, type: socks5, server: 103.138.214.129, port: 11311, username: test56, password: test56, udp: true
+  - { name: proxy6, type: socks5, server: 103.138.214.129, port: 11311, username: test56, password: test56, udp: true }
 `;
 
       return new Response(proxies.trim(), {
         headers: {
-          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Type": "text/yaml; charset=utf-8",
           "Cache-Control": "no-store"
         }
       });
     }
 
-    // Only serve the main config at the root path
+    // Only serve main config at root path
     if (url.pathname !== "/") {
       return new Response("Not Found", { status: 404 });
     }
@@ -91,12 +91,12 @@ dns:
 proxy-providers:
   xrorx-cloudflare:
     type: http
-    url: "${url.origin}/proxies?token=abc123"
+    url: "\${url.origin}/proxies?token=abc123"
     interval: 60
     path: ./providers/xrorx-cloudflare.yaml
     health-check:
       enable: true
-      url: http://www.gstatic.com/generate_204
+      url: https://www.gstatic.com/generate_204
       interval: 60
       timeout: 5000
       lazy: false
@@ -105,15 +105,16 @@ proxy-groups:
   - name: "⚡ UNITE-ALL-BANDWIDTH"
     type: load-balance
     strategy: round-robin
-    url: http://connectivitycheck.gstatic.com/generate_204
+    url: https://www.gstatic.com/generate_204
     interval: 30
     tolerance: 100
+    lazy: false
     use:
       - xrorx-cloudflare
 
   - name: "🎯 BEST-PING"
     type: url-test
-    url: http://connectivitycheck.gstatic.com/generate_204
+    url: https://www.gstatic.com/generate_204
     interval: 30
     tolerance: 50
     lazy: false
@@ -136,7 +137,7 @@ rules:
 
     return new Response(config.trim(), {
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Type": "text/yaml; charset=utf-8",
         "Cache-Control": "no-store"
       }
     });
