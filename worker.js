@@ -4,7 +4,9 @@ export default {
     const url = new URL(request.url);
 
     // Token protection
-    if (url.searchParams.get("token") !== "abc123") {
+    const WORKER_TOKEN = "Halarpo";
+
+    if (url.searchParams.get("token") !== WORKER_TOKEN) {
       return new Response("Forbidden", { status: 403 });
     }
 
@@ -91,7 +93,7 @@ dns:
 proxy-providers:
   xrorx-cloudflare:
     type: http
-    url: "\${url.origin}/proxies?token=abc123"
+    url: "${url.origin}/proxies?token=${WORKER_TOKEN}"
     interval: 60
     path: ./providers/xrorx-cloudflare.yaml
     health-check:
