@@ -3,14 +3,18 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
 
-    // Token protection
+    // ==========================================
+    // TOKEN PROTECTION
+    // ==========================================
     const WORKER_TOKEN = "Halarpo";
 
     if (url.searchParams.get("token") !== WORKER_TOKEN) {
       return new Response("Forbidden", { status: 403 });
     }
 
-    // Allow Clash-based clients
+    // ==========================================
+    // ALLOW CLASH-BASED CLIENTS
+    // ==========================================
     const ua = request.headers.get("User-Agent") || "";
 
     const allowedUA = [
@@ -27,7 +31,9 @@ export default {
       return new Response("404 Not Found", { status: 404 });
     }
 
-    // Proxy provider endpoint
+    // ==========================================
+    // PROXY PROVIDER ENDPOINT
+    // ==========================================
     if (url.pathname === "/proxies") {
       const proxies = `
 proxies:
@@ -39,20 +45,22 @@ proxies:
   - { name: proxy6, type: socks5, server: 103.138.214.129, port: 11311, username: test56, password: test56, udp: true }
 `;
 
-      return new Response(proxies.trim(), {
+      return new Response(proxies.trim() + "\n", {
+        status: 200,
         headers: {
-          "Content-Type": "text/yaml; charset=utf-8",
-          "Cache-Control": "no-store"
+          "Content-Type": "application/yaml; charset=utf-8",
+          "Cache-Control": "no-store, no-cache, must-revalidate"
         }
       });
     }
 
-    // Only serve main config at root path
+    // ==========================================
+    // MAIN CONFIGURATION ENDPOINT
+    // ==========================================
     if (url.pathname !== "/") {
       return new Response("Not Found", { status: 404 });
     }
 
-    // Main FlClash configuration
     const config = `
 port: 7890
 socks-port: 7891
@@ -137,10 +145,11 @@ rules:
   - MATCH,⚡ UNITE-ALL-BANDWIDTH
 `;
 
-    return new Response(config.trim(), {
+    return new Response(config.trim() + "\n", {
+      status: 200,
       headers: {
-        "Content-Type": "text/yaml; charset=utf-8",
-        "Cache-Control": "no-store"
+        "Content-Type": "application/yaml; charset=utf-8",
+        "Cache-Control": "no-store, no-cache, must-revalidate"
       }
     });
   }
