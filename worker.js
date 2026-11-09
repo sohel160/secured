@@ -34,6 +34,7 @@ proxies:
   - { name: proxy3, type: socks5, server: 103.118.152.36, port: 9169, username: movip21, password: movip21, udp: true }
   - { name: proxy4, type: socks5, server: 103.111.224.46, port: 9169, username: movip21, password: movip21, udp: true }
   - { name: proxy5, type: socks5, server: 202.5.36.149, port: 9169, username: movieproxy, password: movieproxy, udp: true }
+  - { name: proxy6, type: socks5, server: 103.138.214.129, port: 11311, username: test56, password: test56, udp: true
 `;
 
       return new Response(proxies.trim(), {
